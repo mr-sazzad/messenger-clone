@@ -2,10 +2,14 @@
 
 import { useCallback, useState } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
+import { toast } from "react-hot-toast";
 import AuthSocialButton from "./AuthSocialButton";
 import Button from "./Button";
 import Input from "./Input";
 
+import { signIn } from "next-auth/react";
+
+import axios from "axios";
 import { BsGithub, BsGoogle } from "react-icons/bs";
 
 type Variant = "LOGIN" | "REGISTER";
@@ -35,19 +39,46 @@ const AuthForm = () => {
     },
   });
 
-  const onSubmit: SubmitHandler<FieldValues> = (data) => {
+  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setIsLoading(true);
+
     if (variant === "REGISTER") {
-      // axios register
+      await axios
+        .post("/api/register", data)
+        .catch(() => toast.error("Something went wrong !"))
+        .finally(() => setIsLoading(false));
     }
 
     if (variant === "LOGIN") {
-      // nextAuth Login
+      signIn("credentials", {
+        ...data,
+        redirect: false,
+      })
+        .then((callback) => {
+          if (callback?.error) {
+            toast.error("Invalid credentials");
+          }
+
+          if (callback?.ok && !callback?.error) {
+            toast.success("Logged in!");
+          }
+        })
+        .finally(() => setIsLoading(false));
     }
   };
 
   const socialAction = (action: string) => {
-    //   next Auth social sign in
+    setIsLoading(true);
+    signIn(action, { redirect: false })
+      .then((callback) => {
+        if (callback?.error) {
+          toast.error("Invalid credentials");
+        }
+        if (callback?.ok && !callback?.error) {
+          toast.success("Logged in!");
+        }
+      })
+      .finally(() => setIsLoading(false));
   };
 
   return (
@@ -65,17 +96,17 @@ const AuthForm = () => {
           )}
 
           <Input
+            id="email"
             label="Email address"
             type="email"
-            id="email"
             register={register}
             errors={errors}
           />
 
           <Input
+            id="password"
             label="Password"
             type="password"
-            id="password"
             register={register}
             errors={errors}
           />
