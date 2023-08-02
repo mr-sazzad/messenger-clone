@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import AuthContext from "./context/AuthContext";
 import ToasterContext from "./context/ToasterContext";
 import "./globals.css";
 
@@ -15,8 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ToasterContext />
-        {children}
+        <AuthContext>
+          <ToasterContext />
+          {children}
+        </AuthContext>
       </body>
     </html>
   );
